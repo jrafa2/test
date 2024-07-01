@@ -1,11 +1,12 @@
 import pyvisa
 import serial
+import numpy
 import time
 import calendar
 import csv
 
-csvfile = 'measures_v_' + str(time.time()) + '.csv'
-num_meas_per_voltage = 10
+csvfile = 'measures_f_' + str(time.time()) + '.csv'
+num_meas_per_freq = 100
 
 ################################
 # Open resources
@@ -25,12 +26,12 @@ writer = csv.writer(csvfile, delimiter='; ', quotechar='|', quoting=csv.QUOTE_MI
 instr_res = instr.query('*IDN?')
 print(f'Waveform source: {instr_res}')
 
-instr.query('SOUR:FUNC DC')   # set DC
-instr.query('SOUR:VOLT 0')  # initial voltage
-instr.query('SOUR:VOLT:OFFS 0')  # initial offset
+instr.query('SOUR:FUNC SIN')   # set DC
+instr.query('SOUR:VOLT 2.5')  # initial voltage
+instr.query('SOUR:VOLT:OFFS 2')  # initial offset
 instr.query('OUTP ON')  # enable output
 
-writer.writerow(['Timestamp', 'Iteration', 'V', 'ADCval'])
+writer.writerow(['Timestamp', 'Iteration', 'f', 'ADCval'])
 
 utc_timestamp = calendar.timegm(utc_time_tuple)
 print("UTC Timestamp: ", utc_timestamp)
@@ -38,26 +39,25 @@ print("UTC Timestamp: ", utc_timestamp)
 ################################
 # Iterate
 ################################
-voltages = range(0, 5, 0.001)  #less than LSB to cover all codes
-iterations = range(1, num_meas_per_voltage)
-for v in voltages:
+freqs = np.logspace(0, 10e6, 10)
+iterations = range(1, num_meas_per_freq)
+for f in freqs:
     current_timestamp = time.time()
 
     # Set a voltage
-    instr_res = instr.query('SOUR:VOLT ' + str((float(v)))
-    print(f'Set voltage: {v}')
+    instr_res = instr.query('SOUR:FREQ ' + str((float(f)))
+    print(f'Set frequency: {f}')
     
     time.sleep(2) # Sleep for 2 seconds
-
+    
     # Read ADC value
     for i in iterations:
-        ser.write('r')
         adc_val = int.from_bytes(ser.read(4), byteorder='big')
         adc_val_volt = adc_val * (5.0 / 1023.0)
         print(f'Read ADC: {adc_val} ({adc_val_volt})')
     
         # Write
-        writer.writerow([current_timestamp, i, v, adc_val])
+        writer.writerow([current_timestamp, i, f, adc_val])
     
 instr.close()
 ser.close()
