@@ -11,7 +11,7 @@ num_meas_per_voltage = 10
 # Open resources
 ################################
 rm = pyvisa.ResourceManager()
-ser = serial.Serial('COM3', 115200, timeout=0, parity=serial.PARITY_EVEN, rtscts=1)
+ser = serial.Serial('COM1', 115200, timeout=0, parity=serial.PARITY_EVEN, rtscts=1)
 #ser = serial.Serial('/dev/ttyUSB0')  # linux
 
 ser.open()
@@ -44,7 +44,7 @@ for v in voltages:
     current_timestamp = time.time()
 
     # Set a voltage
-    instr_res = instr.query('SOUR:VOLT ' + str((float(v)))
+    instr_res = instr.query('SOUR:VOLT ' + str((float(v))))
     print(f'Set voltage: {v}')
     
     time.sleep(2) # Sleep for 2 seconds

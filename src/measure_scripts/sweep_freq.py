@@ -12,7 +12,7 @@ num_meas_per_freq = 100
 # Open resources
 ################################
 rm = pyvisa.ResourceManager()
-ser = serial.Serial('COM3', 115200, timeout=0, parity=serial.PARITY_EVEN, rtscts=1)
+ser = serial.Serial('COM1', 115200, timeout=0, parity=serial.PARITY_EVEN, rtscts=1)
 #ser = serial.Serial('/dev/ttyUSB0')  # linux
 
 ser.open()
@@ -45,7 +45,7 @@ for f in freqs:
     current_timestamp = time.time()
 
     # Set a voltage
-    instr_res = instr.query('SOUR:FREQ ' + str((float(f)))
+    instr_res = instr.query('SOUR:FREQ ' + str((float(f))))
     print(f'Set frequency: {f}')
     
     time.sleep(2) # Sleep for 2 seconds
