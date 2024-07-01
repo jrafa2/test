@@ -2,7 +2,7 @@ int sensorPin = A0;   // select the input pin
 int sensorValue;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 }
 
 void loop() {
