@@ -11,24 +11,26 @@ num_meas_per_voltage = 10
 # Open resources
 ################################
 rm = pyvisa.ResourceManager()
-ser = serial.Serial('COM1', 115200, timeout=0, parity=serial.PARITY_EVEN, rtscts=1)
+ser = serial.Serial('COM3', 115200)
 #ser = serial.Serial('/dev/ttyUSB0')  # linux
 
 ser.open()
-instr = rm.open_resource('GPIB::10::INSTR')
+instr = rm.open_resource('USB0::0x0400::0x09C4::DG1D181702050::INSTR')
 
-writer = csv.writer(csvfile, delimiter='; ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+f = open(csvfile, mode='w')
+
+writer = csv.writer(f, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
 ################################
 # Configuration
 ################################
-instr_res = instr.query('*IDN?')
+instr.write('*IDN?')
+instr_res = instr.read()
 print(f'Waveform source: {instr_res}')
 
-instr.query('SOUR:FUNC DC')   # set DC
-instr.query('SOUR:VOLT 0')  # initial voltage
-instr.query('SOUR:VOLT:OFFS 0')  # initial offset
-instr.query('OUTP ON')  # enable output
+instr.write('SOUR:FUNC DC')   # set DC
+instr.write('APPL:DC DEF,DEF,0')  # initial voltage
+instr.write('OUTP ON')  # enable output
 
 writer.writerow(['Timestamp', 'Iteration', 'V', 'ADCval'])
 
@@ -44,22 +46,26 @@ for v in voltages:
     current_timestamp = time.time()
 
     # Set a voltage
-    instr_res = instr.query('SOUR:VOLT ' + str((float(v))))
+    instr.write('APPL:DC DEF,DEF,' + str((float(v))))
     print(f'Set voltage: {v}')
     
     time.sleep(2) # Sleep for 2 seconds
 
     # Read ADC value
     for i in iterations:
-        ser.write('r')
-        adc_val = int.from_bytes(ser.read(4), byteorder='big')
+        ser.write(bytes('r', 'utf-8'))
+        adc_val = int(ser.readline())
         adc_val_volt = adc_val * (5.0 / 1023.0)
         print(f'Read ADC: {adc_val} ({adc_val_volt})')
     
         # Write
         writer.writerow([current_timestamp, i, v, adc_val])
-    
+
+################################
+# Close resources
+################################
+instr.write('OUTP OFF')  # disable output
+
 instr.close()
 ser.close()
-writer.close()
-csv.close()
+f.close()
