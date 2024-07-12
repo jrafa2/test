@@ -41,8 +41,9 @@ print("UTC Timestamp: ", utc_timestamp)
 ################################
 # Iterate
 ################################
-freqs = np.logspace(0, 10e6, 10)
+freqs = np.logspace(10, 100e3, 10)
 iterations = range(1, num_meas_per_freq)
+max_val = 0;
 for f in freqs:
     current_timestamp = time.time()
 
@@ -61,6 +62,12 @@ for f in freqs:
     
         # Write
         writer.writerow([current_timestamp, i, f, adc_val])
+        
+        # Get the peak value
+        if(adc_val > max_max):
+            max_max = adc_val
+            
+    print(f'Max value: {max_max}')   #BW is when amplitud is 1/2
     
 ################################
 # Close resources
