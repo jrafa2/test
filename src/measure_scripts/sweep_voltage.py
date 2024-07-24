@@ -2,7 +2,9 @@ import pyvisa
 import serial
 import time
 import calendar
+import datetime
 import csv
+import numpy as np
 
 csvfile = 'measures_v_' + str(time.time()) + '.csv'
 num_meas_per_voltage = 10
@@ -14,7 +16,8 @@ rm = pyvisa.ResourceManager()
 ser = serial.Serial('COM3', 115200)
 #ser = serial.Serial('/dev/ttyUSB0')  # linux
 
-ser.open()
+if(ser.isOpen() == False):
+    ser.open()
 instr = rm.open_resource('USB0::0x0400::0x09C4::DG1D181702050::INSTR')
 
 f = open(csvfile, mode='w')
@@ -25,6 +28,7 @@ writer = csv.writer(f, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 # Configuration
 ################################
 instr.write('*IDN?')
+time.sleep(1)   #wait for the instrument to answer
 instr_res = instr.read()
 print(f'Waveform source: {instr_res}')
 
@@ -34,13 +38,13 @@ instr.write('OUTP ON')  # enable output
 
 writer.writerow(['Timestamp', 'Iteration', 'V', 'ADCval'])
 
-utc_timestamp = calendar.timegm(utc_time_tuple)
+utc_timestamp = datetime.datetime.now()
 print("UTC Timestamp: ", utc_timestamp)
 
 ################################
 # Iterate
 ################################
-voltages = range(0, 5, 0.001)  #less than LSB to cover all codes
+voltages = np.linspace(0, 5, num=int(6/0.1))  #less than LSB to cover all codes
 iterations = range(1, num_meas_per_voltage)
 for v in voltages:
     current_timestamp = time.time()
